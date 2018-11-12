@@ -1,3 +1,14 @@
+*.abi
+*.wast
+*.wasm
+.idea
+.history
+cmake-build-debug
+CMakeFiles
+.vscode
+build/
+tests/
+
 # Prerequisites
 *.d
 
