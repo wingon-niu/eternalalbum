@@ -11,7 +11,7 @@ extern "C" {
     
         if (code != receiver) return;
     
-        switch (action) { EOSIO_API(eternalalbum, (withdraw)(createalbum)(clearalldata)) };
+        switch (action) { EOSIO_API(eternalalbum, (withdraw)(createalbum)(uploadpic)(displaypic)(upvotepic)(setcover)(deletepic)(deletealbum)(clearalldata)) };
     }
 }
 
@@ -96,10 +96,11 @@ void eternalalbum::createalbum(const account_name& owner, const string& name)
     });
 
     _albums.emplace(_self, [&](auto& album){
-        album.owner = owner;
-        album.id    = _albums.available_primary_key();
-        album.name  = name;
-        album.pay   = PAY_FOR_ALBUM;
+        album.owner                    = owner;
+        album.id                       = _albums.available_primary_key();
+        album.name                     = name;
+        album.pay                      = PAY_FOR_ALBUM;
+        album.cover_thumb_pic_ipfs_sum = string("default");
     });
 }
 
@@ -116,6 +117,11 @@ void eternalalbum::displaypic(const account_name& owner, const uint64_t& id, con
 
 // 为图片点赞
 void eternalalbum::upvotepic(const uint64_t& id)
+{
+}
+
+// 设置相册的封面图片
+void eternalalbum::setcover(const account_name& owner, const uint64_t& album_id, const string& cover_thumb_pic_ipfs_sum)
 {
 }
 

@@ -56,6 +56,10 @@ public:
     // @abi action
     void upvotepic(const uint64_t& id);
 
+    // 设置相册的封面图片
+    // @abi action
+    void setcover(const account_name& owner, const uint64_t& album_id, const string& cover_thumb_pic_ipfs_sum);
+
     // 删除图片（只删除EOS中的数据，IPFS中的图片依然存在）
     // @abi action
     void deletepic(const account_name& owner, const uint64_t& id);
@@ -86,11 +90,12 @@ private:
         uint64_t     id;
         string       name;
         uint32_t     pay;
+        string       cover_thumb_pic_ipfs_sum;
 
         uint64_t primary_key() const { return id; }
         uint64_t by_owner()    const { return owner; }
 
-        EOSLIB_SERIALIZE( st_album, (owner)(id)(name)(pay) )
+        EOSLIB_SERIALIZE( st_album, (owner)(id)(name)(pay)(cover_thumb_pic_ipfs_sum) )
     };
     typedef eosio::multi_index<
         N(albums), st_album,
@@ -105,6 +110,7 @@ private:
         string       name;
         string       md5_sum;
         string       ipfs_sum;
+        string       thumb_ipfs_sum;
         uint32_t     pay;
         uint64_t     display_fee;
         uint32_t     upvote_num;
@@ -114,7 +120,7 @@ private:
         uint64_t by_album_id()    const { return album_id; }
         uint64_t by_display_fee() const { return ~display_fee; }
 
-        EOSLIB_SERIALIZE( st_pic, (owner)(album_id)(id)(name)(md5_sum)(ipfs_sum)(pay)(display_fee)(upvote_num) )
+        EOSLIB_SERIALIZE( st_pic, (owner)(album_id)(id)(name)(md5_sum)(ipfs_sum)(thumb_ipfs_sum)(pay)(display_fee)(upvote_num) )
     };
     typedef eosio::multi_index<
         N(pics), st_pic,
