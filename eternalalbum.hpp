@@ -21,7 +21,10 @@ using std::string;
 
 #define  PAY_FOR_ALBUM   5*10000   // 每创建一个相册收费  5 eosc
 #define  PAY_FOR_PIC    10*10000   // 每张图片存储收费   10 eosc
+
 #define  NAME_MAX_LEN   36         // 相册名称、图片名称的最大长度(单位：字节)
+#define  MD5_SUM_LEN    32         // md5 check sum的长度(单位：字节)
+#define  IPFS_SUM_LEN   46         // IPFS上的文件的HASH的长度(单位：字节)
 
 // 永恒相册
 
@@ -46,7 +49,7 @@ public:
     // 上传图片
     // @abi action
     void uploadpic(const account_name& owner, const uint64_t& album_id, const string& name,
-                   const string& md5_sum, const string& ipfs_sum);
+                   const string& md5_sum, const string& ipfs_sum, const string& thumb_ipfs_sum);
 
     // 设置图片展示到公共区
     // @abi action

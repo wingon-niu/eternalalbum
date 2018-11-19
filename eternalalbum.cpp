@@ -106,8 +106,38 @@ void eternalalbum::createalbum(const account_name& owner, const string& name)
 
 // 上传图片
 void eternalalbum::uploadpic(const account_name& owner, const uint64_t& album_id, const string& name,
-                             const string& md5_sum, const string& ipfs_sum)
+                             const string& md5_sum, const string& ipfs_sum, const string& thumb_ipfs_sum)
 {
+    require_auth( owner );
+    eosio_assert( name.length()           <= NAME_MAX_LEN, "name is too long" );
+    eosio_assert( md5_sum.length()        == MD5_SUM_LEN,  "wrong md5_sum" );
+    eosio_assert( ipfs_sum.length()       == IPFS_SUM_LEN, "wrong ipfs_sum" );
+    eosio_assert( thumb_ipfs_sum.length() == IPFS_SUM_LEN, "wrong thumb_ipfs_sum" );
+
+    auto itr_album = _albums.find( album_id );
+    eosio_assert(itr_album != _albums.end(), "unknown album_id");
+    eosio_assert(itr_album->owner == owner, "this album is not belong to this owner");
+
+    auto itr_acnt = _accounts.find( owner );
+    eosio_assert(itr_acnt != _accounts.end(), "unknown account");
+
+    _accounts.modify( itr_acnt, 0, [&]( auto& acnt ) {
+        eosio_assert( acnt.quantity.amount >= PAY_FOR_PIC, "insufficient balance" );
+        acnt.quantity.amount -= PAY_FOR_PIC;
+    });
+
+    _pics.emplace(_self, [&](auto& pic){
+        pic.owner                    = owner;
+        pic.album_id                 = album_id;
+        pic.id                       = _pics.available_primary_key();
+        pic.name                     = name;
+        pic.md5_sum                  = md5_sum;
+        pic.ipfs_sum                 = ipfs_sum;
+        pic.thumb_ipfs_sum           = thumb_ipfs_sum;
+        pic.pay                      = PAY_FOR_PIC;
+        pic.display_fee              = 0;
+        pic.upvote_num               = 0;
+    });
 }
 
 // 设置图片展示到公共区
