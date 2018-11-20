@@ -57,7 +57,7 @@ public:
 
     // 为图片点赞
     // @abi action
-    void upvotepic(const uint64_t& id);
+    void upvotepic(const account_name& user, const uint64_t& id);
 
     // 设置相册的封面图片
     // @abi action
@@ -67,7 +67,7 @@ public:
     // @abi action
     void deletepic(const account_name& owner, const uint64_t& id);
 
-    // 删除相册
+    // 删除相册，如果相册中有图片，则不能删除，只能删除空相册
     // @abi action
     void deletealbum(const account_name& owner, const uint64_t& id);
 

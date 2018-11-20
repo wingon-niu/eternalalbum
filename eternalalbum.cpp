@@ -143,26 +143,94 @@ void eternalalbum::uploadpic(const account_name& owner, const uint64_t& album_id
 // 设置图片展示到公共区
 void eternalalbum::displaypic(const account_name& owner, const uint64_t& id, const asset& fee)
 {
+    require_auth( owner );
+
+    auto itr_pic = _pics.find( id );
+    eosio_assert(itr_pic != _pics.end(), "unknown pic id");
+    eosio_assert(itr_pic->owner == owner, "this pic is not belong to this owner");
+
+    if (!fee.is_valid()) {
+        return;
+    }
+    if (fee.symbol != MAIN_SYMBOL) {
+        return;
+    }
+    if (fee.amount <= 0) {
+        return;
+    }
+
+    auto itr_acnt = _accounts.find( owner );
+    eosio_assert(itr_acnt != _accounts.end(), "unknown account");
+
+    _accounts.modify( itr_acnt, 0, [&]( auto& acnt ) {
+        eosio_assert( acnt.quantity >= fee, "insufficient balance" );
+        acnt.quantity -= fee;
+    });
+
+    _pics.modify( itr_pic, 0, [&]( auto& pic ) {
+        pic.display_fee += fee.amount;
+    });
 }
 
 // 为图片点赞
-void eternalalbum::upvotepic(const uint64_t& id)
+void eternalalbum::upvotepic(const account_name& user, const uint64_t& id)
 {
+    require_auth( user );
+
+    auto itr_pic = _pics.find( id );
+    eosio_assert(itr_pic != _pics.end(), "unknown pic id");
+    eosio_assert(itr_pic->owner != user, "can not upvote pic by self");
+
+    _pics.modify( itr_pic, 0, [&]( auto& pic ) {
+        pic.upvote_num += 1;
+    });
 }
 
 // 设置相册的封面图片
 void eternalalbum::setcover(const account_name& owner, const uint64_t& album_id, const string& cover_thumb_pic_ipfs_sum)
 {
+    require_auth( owner );
+    eosio_assert( cover_thumb_pic_ipfs_sum.length() == IPFS_SUM_LEN, "wrong cover_thumb_pic_ipfs_sum" );
+
+    auto itr_album = _albums.find( album_id );
+    eosio_assert(itr_album != _albums.end(), "unknown album_id");
+    eosio_assert(itr_album->owner == owner, "this album is not belong to this owner");
+
+    _albums.modify( itr_album, 0, [&]( auto& album ) {
+        album.cover_thumb_pic_ipfs_sum = cover_thumb_pic_ipfs_sum;
+    });
 }
 
 // 删除图片（只删除EOS中的数据，IPFS中的图片依然存在）
 void eternalalbum::deletepic(const account_name& owner, const uint64_t& id)
 {
+    require_auth( owner );
+
+    auto itr_pic = _pics.find( id );
+    eosio_assert(itr_pic != _pics.end(), "unknown pic id");
+    eosio_assert(itr_pic->owner == owner, "this pic is not belong to this owner");
+
+    _pics.erase(itr_pic);
 }
 
-// 删除相册
+// 删除相册，如果相册中有图片，则不能删除，只能删除空相册
 void eternalalbum::deletealbum(const account_name& owner, const uint64_t& id)
 {
+    require_auth( owner );
+
+    auto itr_album = _albums.find( id );
+    eosio_assert(itr_album != _albums.end(), "unknown album id");
+    eosio_assert(itr_album->owner == owner, "this album is not belong to this owner");
+
+    auto album_index = _pics.get_index<N(byalbumid)>();
+    auto itr = album_index.lower_bound(id);
+    bool has_pic_in_album = false;
+    if (itr != album_index.end() && itr->album_id == id) {
+        has_pic_in_album = true;
+    }
+    eosio_assert(has_pic_in_album == false, "album is not empty");
+
+    _albums.erase(itr_album);
 }
 
 // 清除 multi_index 中的所有数据，测试时使用，上线时去掉
